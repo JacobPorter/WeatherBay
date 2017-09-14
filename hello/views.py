@@ -13,6 +13,7 @@ import numpy as np
 
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, show, output_file, output_notebook
+from bokeh.embed import components
 
 def get_data(my_city):
     return None
