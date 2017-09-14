@@ -14,6 +14,9 @@ import numpy as np
 from bokeh.layouts import gridplot
 from bokeh.plotting import figure, show, output_file, output_notebook
 
+def get_data(my_city):
+    return None
+
 def make_plot(my_city, data):
     x = np.linspace(-10,10,1000)
     pdf = norm.pdf(x, loc=2.5, scale=1.5)
@@ -31,12 +34,14 @@ def index(request):
     # if this is a POST request we need to process the form data
     script = ""
     div = ""
+    data = None
     if request.method == 'POST':
         # create a form instance and populate it with data from the request:
         form = CityForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
             my_city = form.cleaned_data['my_city']
+            data = get_data(my_city)
             plot = make_plot(my_city, data)
             script, div = components(plot)
         else:
