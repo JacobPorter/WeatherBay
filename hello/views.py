@@ -24,7 +24,7 @@ def index(request):
 
     # if a GET (or any other method) we'll create a blank form
     else:
-        form = NameForm()
+        form = CityForm()
         my_city = ""
 
     return render(request, 'index.html', {'form': form, 'my_city': my_city})
