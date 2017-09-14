@@ -5,7 +5,7 @@ from django.http import HttpResponse
 
 from .models import Greeting
 
-from .forms import NameForm
+from .forms import CityForm
 
 def index(request):
     # if this is a POST request we need to process the form data
