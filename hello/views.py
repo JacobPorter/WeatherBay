@@ -14,7 +14,7 @@ def index(request):
         form = CityForm(request.POST)
         # check whether it's valid:
         if form.is_valid():
-            my_city = form.cleaned_data
+            my_city = form.cleaned_data['my_city']
         else:
             my_city = ""
             # process the data in form.cleaned_data as required
