@@ -1,0 +1,36 @@
+<html>
+<head>
+<link
+    href="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.css"
+    rel="stylesheet" type="text/css">
+<link
+    href="//cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.7.min.css"
+    rel="stylesheet" type="text/css">
+
+<script src="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.js"></script>
+<script src="//cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.7.min.js"></script>
+
+</head>
+<body>
+<img src="/static/WeatherBay_1_cropped_192_93.jpg" alt="WeatherBay logo" style="width:192px;height:93px;">
+<H3>WeatherBay: Get the weather forecast with Bayesian inference.</H3>
+
+<br>
+
+<form action="/" method="post">
+  {% csrf_token %} 
+  {{ form }}
+<input type="submit" value="Submit" />
+</form>
+
+<br>
+{{ my_city }}
+
+<br>
+<script type="text/javascript" src="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.js"></script>
+{{ script|safe }}
+{{ div|safe }}
+
+
+</body>
+</html>

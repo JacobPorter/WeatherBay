@@ -27,10 +27,42 @@
 {{ my_city }}
 
 <br>
+
+<figure class="icons">
+        <canvas id="{{ icon1 }}" width="64" height="64">
+        </canvas>
+
+        <canvas id="{{ icon2 }}" width="32" height="32">
+        </canvas>
+
+        <canvas id="{{ icon3 }}" width="32" height="32">
+        </canvas>
+</figure>
+
 <script type="text/javascript" src="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.js"></script>
 {{ script|safe }}
 {{ div|safe }}
 
+
+<br>
+{{ post_dict }}
+<br>
+
+
+  <script src="/static/skycons.js"></script>
+
+    <script>
+      var icons = new Skycons(),
+          list  = [
+            "clear-day", "clear-night", "partly-cloudy-day",
+            "partly-cloudy-night", "cloudy", "rain", "sleet", "snow", "wind",
+            "fog"
+          ],
+          i;
+      for(i = list.length; i--; )
+        icons.set(list[i], list[i]);
+      icons.play();
+    </script>
 
 </body>
 </html>

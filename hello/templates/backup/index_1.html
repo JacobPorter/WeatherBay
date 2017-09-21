@@ -1,0 +1,91 @@
+<html>
+<head>
+<link
+    href="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.css"
+    rel="stylesheet" type="text/css">
+<link
+    href="//cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.7.min.css"
+    rel="stylesheet" type="text/css">
+
+<script src="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.js"></script>
+<script src="//cdn.pydata.org/bokeh/release/bokeh-widgets-0.12.7.min.js"></script>
+
+</head>
+<body>
+<img src="/static/WeatherBay_1_cropped_192_93.jpg" alt="WeatherBay logo" style="width:192px;height:93px;">
+<H3>WeatherBay: Get the weather forecast with Bayesian inference.</H3>
+
+<br>
+
+<form action="/" method="post">
+  {% csrf_token %} 
+  {{ form }}
+<input type="submit" value="Submit" />
+</form>
+
+<br>
+{{ my_city }}
+
+<br>
+
+<figure class="icons">
+        <canvas id="clear-day" width="64" height="64">
+        </canvas>
+
+        <canvas id="clear-night" width="64" height="64">
+        </canvas>
+
+        <canvas id="partly-cloudy-day" width="64" height="64">
+        </canvas>
+
+        <canvas id="partly-cloudy-night" width="64" height="64">
+        </canvas>
+
+        <canvas id="cloudy" width="64" height="64">
+        </canvas>
+
+        <canvas id="rain" width="64" height="64">
+        </canvas>
+
+        <canvas id="sleet" width="64" height="64">
+        </canvas>
+
+        <canvas id="snow" width="64" height="64">
+        </canvas>
+
+        <canvas id="wind" width="64" height="64">
+        </canvas>
+
+        <canvas id="fog" width="64" height="64">
+        </canvas>
+</figure>
+
+<script type="text/javascript" src="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.js"></script>
+{{ script_max|safe }}
+{{ div_max|safe }}
+
+{{ script_min|safe }}
+{{ div_min|safe }} 
+
+<br>
+{{ post_dict }}
+<br>
+
+
+  <script src="/static/skycons.js"></script>
+
+    <script>
+      var icons = new Skycons(),
+          list  = [
+            "clear-day", "clear-night", "partly-cloudy-day",
+            "partly-cloudy-night", "cloudy", "rain", "sleet", "snow", "wind",
+            "fog"
+          ],
+          i;
+      for(i = list.length; i--; )
+        icons.set(list[i], list[i]);
+      icons.play();
+    </script>
+
+</body>
+</html>

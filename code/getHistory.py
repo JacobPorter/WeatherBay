@@ -37,7 +37,9 @@ def getDarkSkyHistory(API_Key, lat, lon, date, outdirectory):
     return dict(zip(extractInfo.dataElements, (record['temperatureMax'], 
                                                record['temperatureMin'], 
                                                record['precipProbability'], 
-                                               record['precipIntensity'] * 24)))
+                                               record['precipIntensity'] * 24,
+                                               extractInfo.translateDarkSky(record['icon'])
+                                               )))
     
 def getHistory(API_Key, lat, lon, date, num_days, outDirectory, thisDay = False):
     """
@@ -47,11 +49,16 @@ def getHistory(API_Key, lat, lon, date, num_days, outDirectory, thisDay = False)
     if not thisDay:
         date = datetime.date(date.year - 1, date.month, date.day)
     averages = dict(zip(extractInfo.dataElements, [0] * len(extractInfo.dataElements)))
+    del averages['icon']
     variance = dict(zip(extractInfo.dataElements, [0] * len(extractInfo.dataElements)))
+    del variance['icon']
+    icon_results = {}
     for i in range(num_days):
         past_date = datetime.date(date.year - i, date.month, date.day)
         try:
             results[past_date] = getDarkSkyHistory(API_Key, lat, lon, past_date, outDirectory)
+            icon_results[past_date] = results[past_date]['icon']
+            del results[past_date]['icon']
         except KeyError:
             sys.stderr.write("Could not find a field in %s, %s for day %s.  Skipping this date.\n" % (str(lat), str(lon), str(past_date)))
     counter = 0
@@ -68,8 +75,11 @@ def getHistory(API_Key, lat, lon, date, num_days, outDirectory, thisDay = False)
             for element in results[key]:
                 variance[element] += math.pow(float(results[key][element]) - averages[element], 2)
         for element in variance:
-            variance[element] = variance[element] / (counter - 1)
-    return {"Averages": averages, "Variance": variance, "Results": results}
+            try:
+                variance[element] = variance[element] / (counter - 1)
+            except ZeroDivisionError:
+                variance[element] = 0 #float('inf')
+    return {"Averages": averages, "Variance": variance, "Results": results, "Icon_Results": icon_results}
     
 def estimateBeta(avg, var):
     try:
@@ -90,14 +100,35 @@ def estimateGamma(avg, var):
         beta = 0
     alpha = avg * beta
     return [alpha, beta]
+
+def estimateDirichlet(icon_results):
+    """
+    Returns concentration.
+    """
+    icon_counts = extractInfo.emptyIconDictionary()
+    for my_date in icon_results:
+        icon_counts[icon_results[my_date]] += 1
+    maximum = -1
+    maximizer = None
+    for icon in extractInfo.icon_search_order:
+        if icon_counts[icon] > maximum:
+            maximum = icon_counts[icon]
+            maximizer = icon
+    return [icon_counts, maximizer]
+        
     
 def getPriorArguments(history):
     priorArguments = {}
     for element in extractInfo.dataElements:
-        avg = history["Averages"][element]
-        var = history["Variance"][element]
+        if element == 'icon':
+            icon_results = history["Icon_Results"]
+        else:
+            avg = history["Averages"][element]
+            var = history["Variance"][element]
         if element == 'precipProbability':
             priorArguments[element] = ["Beta"] + estimateBeta(avg, var)
+        elif element == 'icon':
+            priorArguments[element] = ["Dirichlet"] + estimateDirichlet(icon_results)
         elif element == 'precipAmount':
             priorArguments[element] = ["Gamma"] + estimateGamma(avg, var)
         else:
@@ -114,35 +145,53 @@ def writePriorArguments(priorArguments, cityState, date, priorWriter):
     
 def setupPriorWriter(outfile):
     priorWriter = csv.writer(open(outfile, 'wb'), delimiter='\t', quotechar='"')
-    header = ["CityState", "Date", "precipAmount",  'Alpha', 'Beta', 'precipProbability', 'Alpha', 'Beta',  'temperatureMax',  'Average', 'Variance', 'Alpha', 'Beta', 'temperatureMin', 'Average', 'Variance', 'Alpha', 'Beta']
+    header = ["CityState", "Date", "icon", "Concentration", "argMax", "precipAmount",  'Alpha', 'Beta', 'precipProbability', 'Alpha', 'Beta',  'temperatureMax',  'Average', 'Variance', 'Alpha', 'Beta', 'temperatureMin', 'Average', 'Variance', 'Alpha', 'Beta']
     priorWriter.writerow(header)
     return priorWriter
 
-def parseArgs():
-    DarkSkyKey = getForecasts.getAPIKeys('G:\Weather\Weather_API_Keys.csv')["DarkSky"]
-    cityDict = getForecasts.getCities('G:\Cities\LatLongCities.csv')
-    outfile = 'G:\Temp\Priors_2017_07_21.csv'
-    priorDataLocation = 'G:Temp\DarkSky_PriorData_2017_07_21'
-    allHistoriesFile = os.path.join(priorDataLocation, "allHistories.pickle")
-    booleanDarkSkyHistory = False
-    thisDay = False
-    date = datetime.date(2017, 07, 21)
-    past_days = 20
+def writeActualWeather(actualWeather, date, outfile):
+    actualWriter = csv.writer(open(outfile, 'wb'), delimiter='\t', quotechar='"')
+    header = ["CityState", "Date", "icon", "expectedRainValue", "precipAmount", "precipProbability", 'temperatureMax', 'temperatureMin']
+    actualWriter.writerow(header)
+    cityStates = actualWeather.keys()
+    cityStates.sort()
+    elements = copy.copy(extractInfo.dataElements)
+    elements.sort()
+    for cityState in cityStates:
+        row = [cityState, str(date), actualWeather[cityState]['Icon_Results'][date], actualWeather[cityState]['Averages']["precipAmount"] * actualWeather[cityState]['Averages']["precipProbability"]]
+        for element in elements:
+            if element != 'icon':
+                row = row + [actualWeather[cityState]['Averages'][element]]
+        actualWriter.writerow(row)
+
+def runGetHistory(api_key_location, cities_location, prior_location, history_directory, date, past_days = 20, booleanDarkSkyHistory = True, thisDay = False, actual_outfile = "./actual_weather.csv"):
+    DarkSkyKey = getForecasts.getAPIKeys(api_key_location)["DarkSky"]
+    cityDict = getForecasts.getCities(cities_location)
+    if not os.path.isdir(history_directory):
+        os.makedirs(history_directory)
+    if not os.path.isdir(os.path.dirname(prior_location)):
+        os.makedirs(os.path.dirname(prior_location))
+    allHistoriesFile = os.path.join(history_directory, "allHistories.pickle")
+    #booleanDarkSkyHistory = True
+    #thisDay = False
+    #past_days = 20
     cityStateKeys = cityDict.keys()
     cityStateKeys.sort()
-    priorWriter = setupPriorWriter(outfile)
+    if not thisDay:
+        priorWriter = setupPriorWriter(prior_location)
     allPriorArguments = {}
     counter = 0
     allHistories = {}
     if not booleanDarkSkyHistory:
         allHistories = pickle.load(open(allHistoriesFile, 'rb'))
+        pprint(allHistories)
     for cityState in cityStateKeys:
 #         if counter >= 2:
 #             break
         counter += 1
         if booleanDarkSkyHistory:
             latlon = cityDict[cityState]
-            history = getHistory(DarkSkyKey, latlon[0], latlon[1], date, past_days, priorDataLocation, thisDay = thisDay)
+            history = getHistory(DarkSkyKey, latlon[0], latlon[1], date, past_days, history_directory, thisDay = thisDay)
             allHistories[cityState] = history  
         else:
             history = allHistories[cityState]
@@ -152,12 +201,22 @@ def parseArgs():
             writePriorArguments(priorArguments, cityState, date, priorWriter)
     if booleanDarkSkyHistory:
         pickle.dump(allHistories, open(allHistoriesFile, 'wb'))
+    if thisDay:
+        writeActualWeather(allHistories, date, actual_outfile)
     pprint(allHistories)
     pprint(allPriorArguments)
     return allPriorArguments
     
 def main():
-    parseArgs()
+    date_time_string = "2017-07-22_11"
+    date_to_get = datetime.date(2017, 07, 23)
+    cities_location = 'G:\School\VA Tech Courses\ZhangLab\DataIncubator\LatLongCities.csv'
+    output_directory = os.path.join("C:\Users\jsporter\Downloads\Temp", date_time_string)
+    api_key_location = 'G:\School\VA Tech Courses\ZhangLab\DataIncubator\Weather_API_Keys.csv'
+    prior_location = os.path.join(output_directory, "Priors_" + date_time_string + ".csv")
+    actual_outfile = os.path.join(output_directory, "Actual_Weather_" + str(date_to_get) + ".csv")
+    history_directory = os.path.join(output_directory, "DarkSky_PriorData_" + date_time_string)    
+    runGetHistory(api_key_location, cities_location, prior_location, history_directory, date_to_get, past_days = 1, thisDay = True, actual_outfile = actual_outfile)
     
 if __name__ == "__main__":
     main()

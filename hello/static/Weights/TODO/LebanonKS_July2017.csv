@@ -1,0 +1,10 @@
+Provider	High Temp	Low Temp	Icon Precip	Text Precip	Overall
+Foreca   	73.42%	63.29%	75.95%	75.95%	72.15%
+MeteoGroup   	60.92%	65.52%	81.61%	80.46%	72.13%
+Weather Underground   	66.67%	66.67%	68.97%	68.97%	67.82%
+The Weather Channel   	65.52%	66.67%	68.97%	68.97%	67.53%
+AccuWeather   	65.52%	60.92%	60.92%	58.62%	61.49%
+World Weather Online   	34.57%	59.26%	75.31%	75.31%	61.11%
+NWS Digital Forecast   	65.43%	64.20%	54.32%	54.32%	59.57%
+Dark Sky (forecast.io)   	58.62%	56.32%	51.72%	51.72%	54.60%
+Persistence   	38.10%	32.14%	65.48%	65.48%	50.30%
