@@ -12,6 +12,9 @@ from collections import defaultdict
 """
 Get weather forecast information from the weather services in JSON format.
 """
+
+USEAPI = True
+
 def strNow():
     now = datetime.datetime.now()
     strnow = str(now).replace(" ", "_").replace(":", "-").split(".")[0].strip()
@@ -28,7 +31,7 @@ def getJSONfromURL(url, service, city, state, forecast_type):
             #data = json.loads(response.read())
             
             response = requests.get(url)
-            if response.status_code == '200':
+            if response.status_code == 200:
                 data = response.json()
             else:
                 print(response.status_code)
@@ -59,8 +62,11 @@ def getAccuWeather(city, state, API_Key, AccuKey, save_directory=None):
     #url_12hour = "https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/%s?apikey=%s&details=true" % (str(AccuKey), str(API_Key))
     #file_5day = os.path.join(save_directory, getFileName("AccuWeather", city, state, strnow, "5day"))
     #file_12hour = os.path.join(save_directory, getFileName("AccuWeather", city, state, strnow, "12hour"))
-    return [json.load(open('./hello/static/AccuWeather_New_YorkNY.json'))]
-    #return (getJSONfromURL(url_5day, service, city, state, "5day"))
+    if USEAPI:
+        return [getJSONfromURL(url_5day, service, city, state, "5day")]
+    else:
+        return [json.load(open('./hello/static/AccuWeather_New_YorkNY.json'))]
+    
     #getJSONfromURL(url_12hour, file_12hour, service, city, state, "12hour")
     
 
@@ -73,8 +79,11 @@ def getNWS(city, state, lat, lon, grid, save_directory=None):
     #file_grid = os.path.join(save_directory, getFileName("NWS", city, state, strnow, "grid"))
     #file_forecast = os.path.join(save_directory, getFileName("NWS", city, state, strnow, "forecast"))
     #file_hourly = os.path.join(save_directory, getFileName("NWS", city, state, strnow, "hourly"))
-    return [json.load(open('./hello/static/NWS_New_YorkNY_grid.json')), json.load(open('./hello/static/NWS_New_YorkNY_orecast.json'))]
-    #return (getJSONfromURL(url_grid, service, city, state, "grid"), getJSONfromURL(url_forecast, service, city, state, "forecast"))
+    
+    if USEAPI:
+        return [getJSONfromURL(url_grid, service, city, state, "grid"), getJSONfromURL(url_forecast, service, city, state, "forecast")]
+    else:
+        return [json.load(open('./hello/static/NWS_New_YorkNY_grid.json')), json.load(open('./hello/static/NWS_New_YorkNY_forecast.json'))]
     #getJSONfromURL(url_hourly, file_hourly, service, city, state, "hourly")
 
 def getDarkSky(city, state, API_Key, lat, lon, save_directory=None):
@@ -82,8 +91,11 @@ def getDarkSky(city, state, API_Key, lat, lon, save_directory=None):
     #strnow = strNow()
     url = "https://api.darksky.net/forecast/%s/%s,%s" % (str(API_Key), str(lat), str(lon))
     #file_latlon = os.path.join(save_directory, getFileName("DarkSky", city, state, strnow, "latlon"))
-    return [json.load(open('./hello/static/DarkSky_New_YorkNY.json'))]
-    #return (getJSONfromURL(url, service, city, state, "latlon"))
+    if USEAPI:
+        return [getJSONfromURL(url, service, city, state, "latlon")]
+    else:
+        return [json.load(open('./hello/static/DarkSky_New_YorkNY.json'))]
+    #
 
 def getWUnderground(city, state, API_Key, save_directory=None):
     service = "WUnderground"
@@ -92,9 +104,10 @@ def getWUnderground(city, state, API_Key, save_directory=None):
     #url_hourly = "https://api.wunderground.com/api/%s/hourly/q/%s/%s.json" % (str(API_Key), str(state), str(city))
     #file_forecast = os.path.join(save_directory, getFileName("WUnderground", city, state, strnow, "forecast"))
     #file_hourly = os.path.join(save_directory, getFileName("WUnderground", city, state, strnow, "hourly"))
-    return [json.load(open('./hello/static/WUnderground_New_YorkNY.json'))]
-    #return (getJSONfromURL(url_forecast, service, city, state, "forecast"))
-    
+    if USEAPI:
+        return [getJSONfromURL(url_forecast, service, city, state, "forecast")]
+    else:
+        return [json.load(open('./hello/static/WUnderground_New_YorkNY.json'))]
     #getJSONfromURL(url_hourly, file_hourly, service, city, state, "hourly")
 
 """
@@ -553,7 +566,7 @@ def getCities(cities_location):
 def getWeightsFromFile(weight_directory, file_name):
     weights = {}
     with open(os.path.join(weight_directory, file_name), 'r') as csvfile:
-        weightReader = csv.reader(csvfile, delimiter=',', quotechar='"')
+        weightReader = csv.reader(csvfile, delimiter='\t', quotechar='|')
         next(weightReader)        
         for row in weightReader:
             if row[0].startswith("Dark"):
@@ -572,8 +585,10 @@ def getWeightsFromFile(weight_directory, file_name):
             
 def getWeights(cityState, weight_directory):
     onlyfiles = [f for f in os.listdir(weight_directory) if os.path.isfile(os.path.join(weight_directory, f)) and f.endswith(".csv")]
-    key = cityState.replace(",", "").replace(" ", "")
+    key = cityState.split(",")[0]
+    #key = cityState.replace(",", "").replace(" ", "")
     file_name = [file_name for file_name in onlyfiles if key in file_name]
+    #print(key, file_name)
     if len(file_name) == 0:
         return {}
     else:
@@ -606,10 +621,13 @@ def get_forecasts(city_string, city_dictionary, api_key_dictionary, weight_dicti
     allForecasts["DarkSky"] = extractDarkSky(getDarkSky(location['city'], location['state'], api_key_dictionary['DARKSKY_KEY'], location['lat'], location['lon']))
     allForecasts["NWS"] = extractNWS(getNWS(location['city'], location['state'], location['lat'], location['lon'], location['grid']))
     allForecasts["WUnderground"] = extractWUnderground(getWUnderground(location['city'], location['state'], api_key_dictionary['WU_KEY']))
-    #today = datetime.datetime.now()
-    #sample_date = datetime.date(today.year, today.month, today.day)
-    sample_date = datetime.date(2017, 9, 16)
-    prediction_date = datetime.date(2017, 9, 17)
+    if USEAPI:
+        today = datetime.datetime.now()
+        sample_date = datetime.date(today.year, today.month, today.day)
+    else:
+        sample_date = datetime.date(2017, 9, 16)
+    one_day = datetime.timedelta(days = 1)
+    prediction_date = sample_date + one_day
     likelihoodModels = getAggregateForecastByCityDay(allForecasts, weight_dictionary, location['city'] + ', ' + location['state'], sample_date)
     #print("likelihood function:")
     #pprint(likelihoodModels)

@@ -25,23 +25,57 @@
 
 <br>
 {{ my_city }}
-
+<br>
+{{ forecast_date }}
 <br>
 
-<figure class="icons">
-        <canvas id="{{ icon1 }}" width="64" height="64">
-        </canvas>
-
-        <canvas id="{{ icon2 }}" width="32" height="32">
-        </canvas>
-
-        <canvas id="{{ icon3 }}" width="32" height="32">
-        </canvas>
-</figure>
+<center>
+	<figure class="icons">
+	        <canvas id="{{ icon1 }}" width="{{ iw_1 }}" height="{{ iw_1 }}">
+	        </canvas>
+	
+	        <canvas id="{{ icon2 }}" width="{{ iw_2 }}" height="{{ iw_2 }}">
+	        </canvas>
+	
+	        <canvas id="{{ icon3 }}" width="{{ iw_3 }}" height="{{ iw_3 }}">
+	        </canvas>
+	        
+	        <canvas id="{{ icon4 }}" width="{{ iw_4 }}" height="{{ iw_4 }}">
+	        </canvas>
+	</figure>
+</center>
 
 <script type="text/javascript" src="//cdn.pydata.org/bokeh/release/bokeh-0.12.7.min.js"></script>
 {{ script|safe }}
 {{ div|safe }}
+
+
+ <table style="width:60%">
+  <tr>
+    <td>  <a href="https://www.wunderground.com/weather/api/" target="_blank">
+  			<img src="/static/The_Weather_Company_IBM_Byline.svg.png" alt="The Weather Company" style="width:64px;height:64px;border:0;">
+  			<br>The Weather Company
+		</a> 
+	</td>
+    <td>
+    		<a href="https://www.accuweather.com/" target="_blank">
+  			<img src="/static/accuweather_icon.jpeg" alt="AccuWeather" style="width:64px;height:64px;border:0;">
+			<br>AccuWeather
+			</a> 
+    </td>
+    <td>  <a href="https://darksky.net" target="_blank">
+  			<img src="/static/dark_sky_icon.jpeg" alt="Dark Sky" style="width:64px;height:64px;border:0;">
+  			<br>Dark Sky
+			</a> 
+    </td>
+        <td>  <a href="http://www.weather.gov/" target="_blank">
+  			<img src="/static/nws_icon.png" alt="The National Weather Service" style="width:64px;height:64px;border:0;">
+  			<br>The National Weather Service
+			</a> 
+    </td>
+  </tr>
+</table> 
+
 
 
 <br>
@@ -63,6 +97,6 @@
         icons.set(list[i], list[i]);
       icons.play();
     </script>
-
+    
 </body>
 </html>
