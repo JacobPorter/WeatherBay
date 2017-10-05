@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/usr/lib64/python3.4/site-packages/django/core/handlers/exception.py", line 41, in inner
+    response = get_response(request)
+  File "/usr/lib64/python3.4/site-packages/django/core/handlers/base.py", line 249, in _legacy_get_response
+    response = self._get_response(request)
+  File "/usr/lib64/python3.4/site-packages/django/core/handlers/base.py", line 187, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/lib64/python3.4/site-packages/django/core/handlers/base.py", line 185, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/jsporter/workspace/WeatherBay/hello/views.py", line 144, in index
+    posterior_dict =  get_forecasts(my_city, city_dictionary, api_key_dictionary, weight_dictionary)
+  File "/home/jsporter/workspace/WeatherBay/hello/getWebForecasts.py", line 622, in get_forecasts
+    allForecasts["NWS"] = extractNWS(getNWS(location['city'], location['state'], location['lat'], location['lon'], location['grid']))
+  File "/home/jsporter/workspace/WeatherBay/hello/getWebForecasts.py", line 296, in extractNWS
+    getIconData(forecast_data)
+  File "/home/jsporter/workspace/WeatherBay/hello/getWebForecasts.py", line 294, in getIconData
+    results_dictionary[getDate(period['startTime'])]['icon'] = translateNWS(period['shortForecast'])
+KeyError: datetime.date(2017, 9, 29)
